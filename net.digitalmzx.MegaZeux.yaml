@@ -1,0 +1,38 @@
+---
+app-id: net.digitalmzx.MegaZeux
+runtime: org.freedesktop.Platform
+runtime-version: '18.08'
+sdk: org.freedesktop.Sdk
+command: megazeux
+rename-desktop-file: megazeux.desktop
+finish-args:
+  - --share=ipc
+  - --device=all
+  - --socket=x11
+  - --socket=pulseaudio
+  - --filesystem=host
+cleanup:
+  - /include
+
+modules:
+  - name: megazeux
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/bin
+      - ln -s /bin/true /app/bin/X
+      - ./config.sh --platform unix --prefix /app --sysconfdir /app/etc --bindir /app/lib/megazeux --gamesdir /app/bin --enable-release 
+      - echo 'RAWLIBDIR=lib' >> platform.inc
+      - echo 'LIBDIR=/app/lib' >> platform.inc
+      - rm /app/bin/X
+      - make -j $FLATPAK_BUILDER_N_JOBS
+      - make install
+    sources:
+      - type: git
+        url: https://github.com/AliceLR/megazeux.git
+        tag: v2.91j
+      - type: shell
+        commands:
+          - sed -e 's/Icon=.*/Icon=net.digitalmzx.MegaZeux.png/' -i arch/unix/*.desktop
+    post-install:
+      - mv /app/share/applications/mzxrun.desktop /app/share/applications/net.digitalmzx.MegaZeux.mzxrun.desktop
+      - mv /app/share/icons/megazeux.png /app/share/icons/net.digitalmzx.MegaZeux.png
